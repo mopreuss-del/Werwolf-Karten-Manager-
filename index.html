@@ -83,7 +83,12 @@
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
       background: #111222; 
       display: flex; flex-direction: column; justify-content: center; align-items: center; 
-      z-index: 200; transition: opacity 0.8s ease, visibility 0.8s; padding: 20px; text-align: center; 
+      z-index: 200; transition: opacity 0.5s ease, visibility 0.5s; padding: 20px; text-align: center; 
+    }
+    #splash.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
     }
     #splash h1 { font-size: 2.3rem; color: var(--accent-gold); text-shadow: 0 0 20px rgba(244, 208, 63, 0.4); margin-bottom: 10px; }
     #splash p { color: var(--text-sub); font-size: 1.1rem; margin-bottom: 30px; }
@@ -218,11 +223,11 @@
 </head>
 <body>
 
-  <!-- Splash-Screen mit Versionsnummer v2.0 -->
-  <div id="splash">
+  <!-- Splash-Screen mit verbesserter Klick-Funktion -->
+  <div id="splash" onclick="closeSplash()">
     <h1>🐺 Werwolf Rollen-Manager</h1>
     <p>v2.0</p>
-    <button class="splash-btn" onclick="closeSplash()">Loslegen</button>
+    <button class="splash-btn" onclick="closeSplash(); event.stopPropagation();">Loslegen</button>
   </div>
 
   <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
@@ -598,11 +603,18 @@
     }
 
     function closeSplash() {
-      triggerVibe();
-      document.getElementById('splash').style.opacity = '0';
-      setTimeout(() => document.getElementById('splash').style.display = 'none', 800);
-      renderRoleConfig(); renderGuide(); prepareNightSequence();
-      loadRecentGamesUI();
+      if (typeof triggerVibe === 'function') triggerVibe();
+      const splash = document.getElementById('splash');
+      if (splash) {
+        splash.classList.add('hidden');
+        setTimeout(() => {
+          splash.style.display = 'none';
+        }, 500);
+      }
+      if (typeof renderRoleConfig === 'function') renderRoleConfig();
+      if (typeof renderGuide === 'function') renderGuide();
+      if (typeof prepareNightSequence === 'function') prepareNightSequence();
+      if (typeof loadRecentGamesUI === 'function') loadRecentGamesUI();
     }
     
     function switchTab(tabId, btn) {
@@ -672,9 +684,8 @@
       if (totalRoles === playerCount) { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Perfekt!)`; summary.style.color = 'var(--text-main)'; startBtn.disabled = false; }
       else if (totalRoles > playerCount) { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Zu viele!)`; summary.style.color = 'var(--accent-red)'; startBtn.disabled = true; }
       else { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Zu wenig!)`; summary.style.color = 'var(--accent-gold)'; startBtn.disabled = true; }
-    }
-
-    function updateRoleCount(index, change) {
+          }
+          function updateRoleCount(index, change) {
       triggerVibe();
       if (change > 0 && getTotalRolesCount() >= getPlayerCount()) return;
       if (availableRoles[index].count + change >= 0) { availableRoles[index].count += change; renderRoleConfig(); prepareNightSequence(); saveInputsToStorage(); }
@@ -919,7 +930,6 @@
       }
 
       box.innerHTML = `
-        <div class="card" style="background: rgba(0,0,0,0.3); border: 2px solid       box.innerHTML = `
         <div class="card" style="background: rgba(0,0,0,0.3); border: 2px solid var(--accent-gold);">
           <h2 style="color:var(--accent-gold); text-align:center;">☀️ Morgen von Tag ${currentNight}</h2>
           <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:10px; margin-top:8px;">
@@ -937,5 +947,137 @@
             🌙 Nächste Nacht einläuten
           </button>
         </div>`;
+    }
+
+    function lynchPlayer(playerName) {
+      triggerVibe();
+      if (!deadPlayers.includes(playerName)) {
+        deadPlayers.push(playerName);
+        if (lovers.includes(playerName)) {
+          const partner = lovers.find(p => p !== playerName);
+          if (partner && !deadPlayers.includes(partner)) {
+            deadPlayers.push(partner);
+            alert(`💔 Liebeskummer-Tod von ${partner}!`);
+          }
         }
+        renderDayVotingPhase();
+      }
+    }
+
+    function finishDayAndNextNight() {
+      triggerVibe();
+      currentNight++;
+      nightSummary = { victim: null, witchAction: null, healed: null, poisonTarget: null };
+      lastInspectedPlayer = null;
+      prepareNightSequence();
+    }
+
+    function resetNightCounter() {
+      triggerVibe();
+      currentNight = 1;
+      deadPlayers = [];
+      lovers = [];
+      captain = null;
+      lastInspectedPlayer = null;
+      nightSummary = { victim: null, witchAction: null, healed: null, poisonTarget: null };
+      prepareNightSequence();
+    }
+
+    function initGame() {
+      triggerVibe();
+      players = document.getElementById('playerInput').value.split(/,|\n/).map(p => p.trim()).filter(p => p.length > 0);
       
+      let playerString = players.join(', ');
+      if (playerString && !recentGames.includes(playerString)) {
+        recentGames.unshift(playerString);
+        if (recentGames.length > 3) recentGames.pop();
+        localStorage.setItem('ww_history', JSON.stringify(recentGames));
+        loadRecentGamesUI();
+      }
+
+      let rolePool = [];
+      availableRoles.forEach(role => { if (activeExpansions[role.category]) { for (let i = 0; i < role.count; i++) rolePool.push(role); } });
+      if (rolePool.length !== players.length) return;
+      let shuffledRoles = [...rolePool].sort(() => Math.random() - 0.5);
+      assignments = {};
+      players.forEach((player, index) => { assignments[player] = shuffledRoles[index]; });
+      currentPlayerIndex = 0;
+      currentNight = 1;
+      deadPlayers = [];
+      lovers = [];
+      captain = null;
+      lastInspectedPlayer = null;
+      nightSummary = { victim: null, witchAction: null, healed: null, poisonTarget: null };
+      document.getElementById('setupStatus').innerText = `✅ Rollen verteilt! Wechsel zu Reiter 2.`;
+      loadCurrentPlayer();
+      prepareNightSequence();
+    }
+
+    function loadRecentGamesUI() {
+      const container = document.getElementById('recentGamesList');
+      if (recentGames.length === 0) {
+        container.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-sub);">Noch keine vorherigen Runden gespeichert.</span>`;
+        return;
+      }
+      container.innerHTML = recentGames.map((game, idx) => `
+        <button class="btn-secondary" style="font-size:0.75rem; padding:4px 8px;" onclick="restoreGame('${game}')">Runde ${idx+1}: (${game.split(',').length} Spieler)</button>
+      `).join('');
+    }
+
+    function restoreGame(gameNames) {
+      triggerVibe();
+      document.getElementById('playerInput').value = gameNames;
+      renderRoleConfig();
+      saveInputsToStorage();
+    }
+
+    function loadCurrentPlayer() {
+      if (players.length === 0) return;
+      const playerName = players[currentPlayerIndex];
+      document.getElementById('currentTurnName').innerText = `Handy an: ${playerName}`;
+      document.getElementById('assignedRoleName').innerText = assignments[playerName].name;
+      document.getElementById('assignedRoleDesc').innerText = assignments[playerName].desc;
+    }
+
+    function revealRole() { triggerVibe(); document.getElementById('hiddenCover').classList.add('revealed'); }
+
+    function nextPlayer() {
+      triggerVibe();
+      const cover = document.getElementById('hiddenCover');
+      cover.style.transition = 'none'; cover.classList.remove('revealed');
+      currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      loadCurrentPlayer();
+      setTimeout(() => { cover.style.transition = 'transform 0.4s ease'; }, 50);
+    }
+
+    function renderGuide() {
+      const container = document.getElementById('rolesListContainer');
+      container.innerHTML = '';
+
+      categoryOrder.forEach(cat => {
+        if (currentGuideFilter !== "Alle" && currentGuideFilter !== cat) return;
+        const rolesInCat = availableRoles.filter(r => r.category === cat);
+        if (rolesInCat.length === 0) return;
+
+        container.innerHTML += `<div class="dlc-header">📦 ${cat}</div>`;
+
+        rolesInCat.forEach(r => {
+          let teamBadgeText = r.team === 'wolf' ? 'Werwolf' : (r.team === 'neutral' ? 'Neutral' : 'Dorf');
+          container.innerHTML += `
+            <div class="role-item ${r.team}">
+              <div class="role-title"><span>${r.name}</span><span class="team-badge ${r.team}">${teamBadgeText}</span></div>
+              <div class="role-desc">${r.desc}</div>
+            </div>`;
+        });
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => { 
+      loadFromStorage();
+      renderRoleConfig();
+      renderGuide();
+      loadRecentGamesUI();
+    });
+  </script>
+</body>
+</html>
