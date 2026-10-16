@@ -97,7 +97,17 @@
     }
     .exp-toggle-btn.active { background: var(--accent-purple); color: white; border-color: var(--accent-purple); }
 
-    .role-config-list { display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; padding-right: 5px; }
+    .dlc-header {
+      color: var(--accent-gold);
+      font-size: 0.95rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin: 12px 0 6px 0;
+      border-bottom: 1px solid rgba(255,183,3,0.3);
+      padding-bottom: 4px;
+    }
+
+    .role-config-list { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 5px; }
     .role-config-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 10px; }
 
     .counter-controls { display: flex; align-items: center; gap: 10px; }
@@ -155,9 +165,10 @@
 </head>
 <body>
 
+  <!-- Splash-Screen mit Versionsnummer v1.7 -->
   <div id="splash">
     <h1>🐺 Werwolf Rollen-Manager</h1>
-    <p>Mit automatischem Speicherstand (LocalStorage)</p>
+    <p>v1.7</p>
     <button class="splash-btn" onclick="closeSplash()">Loslegen</button>
   </div>
 
@@ -190,8 +201,7 @@
         </div>
         <div class="expansion-toggles">
           <button class="exp-toggle-btn active" id="toggle-Klassik" onclick="toggleExpansion('Klassik')">Klassik</button>
-          <button class="exp-toggle-btn active" id="toggle-Add-on" onclick="toggleExpansion('Add-on')">Add-on</button>
-          <button class="exp-toggle-btn active" id="toggle-Neumond" onclick="toggleExpansion('Neumond')">Neumond</button>
+          <button class="exp-toggle-btn active" id="toggle-Charakter Pack" onclick="toggleExpansion('Charakter Pack')">Charakter Pack</button>
         </div>
         <div class="role-config-list" id="roleConfigContainer"></div>
         <div id="countSummary" style="font-size: 0.9rem; font-weight: bold; color: var(--accent-gold); text-align: center; margin-top: 5px;"></div>
@@ -237,16 +247,17 @@
         <div class="expansion-toggles" style="margin-top: 5px;">
           <button class="exp-toggle-btn active" id="guide-filter-Alle" onclick="filterGuide('Alle', this)">Alle</button>
           <button class="exp-toggle-btn" id="guide-filter-Klassik" onclick="filterGuide('Klassik', this)">Klassik</button>
-          <button class="exp-toggle-btn" id="guide-filter-Add-on" onclick="filterGuide('Add-on', this)">Add-on</button>
-          <button class="exp-toggle-btn" id="guide-filter-Neumond" onclick="filterGuide('Neumond', this)">Neumond</button>
+          <button class="exp-toggle-btn" id="guide-filter-Charakter Pack" onclick="filterGuide('Charakter Pack', this)">Charakter Pack</button>
         </div>
         <div id="rolesListContainer" style="margin-top: 10px;"></div>
       </div>
     </div>
   </div>
     <script>
+    const categoryOrder = ["Klassik", "Charakter Pack"];
+
     const availableRoles = [
-      // KLASSIK
+      // 1. KLASSIK
       { id: "amor", name: "Amor", team: "dorf", category: "Klassik", desc: "Wacht in der 1. Nacht auf und bestimmt zwei Spieler als Liebespaar.", count: 0, nightOrder: 1, night1Only: true, actionType: "amor" },
       { id: "dieb", name: "Der Dieb", team: "dorf", category: "Klassik", desc: "Darf in der 1. Nacht unter zwei Extrakarten seine Rolle tauschen.", count: 0, nightOrder: 2, night1Only: true, actionType: "none" },
       { id: "seherin", name: "Die Seherin", team: "dorf", category: "Klassik", desc: "Darf jede Nacht die wahre Identität eines Spielers erfahren.", count: 1, nightOrder: 5, night1Only: false, actionType: "inspect" },
@@ -257,32 +268,26 @@
       { id: "hauptmann", name: "Der Hauptmann", team: "dorf", category: "Klassik", desc: "Wird vom Dorf gewählt; seine Stimme zählt bei Abstimmungen doppelt.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
       { id: "schlafendes_maedchen", name: "Das Kleine Mädchen", team: "dorf", category: "Klassik", desc: "Darf nachts heimlich blinzeln, um die Werwölfe zu beobachten.", count: 0, nightOrder: 8, night1Only: false, actionType: "none" },
 
-      // CHARAKTER ADD-ON
-      { id: "wilder_junge", name: "Der Wilde Junge", team: "neutral", category: "Add-on", desc: "Wählt am ersten Abend ein Vorbild aus.", count: 0, nightOrder: 4, night1Only: true, actionType: "none" },
-      { id: "fuchs", name: "Der Fuchs", team: "dorf", category: "Add-on", desc: "Beschnüffelt nachts benachbarte Spieler nach Wölfen.", count: 0, nightOrder: 6, night1Only: false, actionType: "inspect" },
-      { id: "floete", name: "Der Flötenspieler", team: "neutral", category: "Add-on", desc: "Verzaubert nachts zwei Personen.", count: 0, nightOrder: 7, night1Only: false, actionType: "none" },
-      { id: "urwolf", name: "Der Urwolf", team: "wolf", category: "Add-on", desc: "Kann einmal das nächtliche Opfer in einen Werwolf verwandeln.", count: 0, nightOrder: 8, night1Only: false, actionType: "wolfKill" },
-      { id: "grosser_wolf", name: "Der Große Böse Wolf", team: "wolf", category: "Add-on", desc: "Darf nachts ein zweites Opfer fressen, solange kein Wolf starb.", count: 0, nightOrder: 8, night1Only: false, actionType: "wolfKill" },
-      { id: "erfinder", name: "Der Erfinder", team: "dorf", category: "Add-on", desc: "Verteilt magische Hilfsmittel an Mitspieler.", count: 0, nightOrder: 11, night1Only: false, actionType: "inventor" },
-      { id: "baer", name: "Der Bärenführer", team: "dorf", category: "Add-on", desc: "Knurrt morgens, wenn ein Wolf neben ihm sitzt.", count: 1, nightOrder: 99, night1Only: false, actionType: "none" },
-      { id: "ritter", name: "Der Ritter", team: "dorf", category: "Add-on", desc: "Infiziert den linken Wolf beim Gefressenwerden.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
-      { id: "magd", name: "Die Ergebene Magd", team: "dorf", category: "Add-on", desc: "Opfert sich bei Hinrichtung für die Rolle des Opfers.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
-      { id: "richter", name: "Der Stotternde Richter", team: "dorf", category: "Add-on", desc: "Erzwingt eine zweite Abstimmung.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
-      { id: "engel", name: "Der Engel", team: "dorf", category: "Add-on", desc: "Gewinnt sofort allein bei frühem Tod.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
-      { id: "puppe", name: "Der Puppenspieler", team: "neutral", category: "Add-on", desc: "Kontrolliert Stimme oder Aktion eines Spielers.", count: 0, nightOrder: 12, night1Only: false, actionType: "none" },
-      { id: "parasit", name: "Der Parasit", team: "neutral", category: "Add-on", desc: "Fest an ein Wirt-Schicksal gebunden.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
-      { id: "verfluchter", name: "Der Verfluchte", team: "neutral", category: "Add-on", desc: "Wird bei Wolfsbiss sofort zum Werwolf.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
-      { id: "suendenbock", name: "Der Sündenbock", team: "neutral", category: "Add-on", desc: "Stirbt automatisch bei Unentschieden.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
-      { id: "zigeunerin", name: "Die Zigeunerin", team: "neutral", category: "Add-on", desc: "Stellt Fragen an Verstorbene.", count: 0, nightOrder: 14, night1Only: false, actionType: "none" },
-
-      // NEUMOND
-      { id: "wolfshund", name: "Der Wolfshund", team: "neutral", category: "Neumond", desc: "Entscheidet sich am 1. Abend für Seite.", count: 0, nightOrder: 3, night1Only: true, actionType: "none" },
-      { id: "weiser_wolf", name: "Der Weiße Wolf", team: "wolf", category: "Neumond", desc: "Kann heimlich einen Werwolf töten.", count: 0, nightOrder: 9, night1Only: false, actionType: "wolfKill" },
-      { id: "brandpyromane", name: "Der Brandstifter", team: "neutral", category: "Neumond", desc: "Benetzt Ziele mit Öl und zündet sie an.", count: 0, nightOrder: 11, night1Only: false, actionType: "none" },
-      { id: "gaukler", name: "Der Gaukler", team: "dorf", category: "Neumond", desc: "Bringt Ereigniskarten ins Spiel.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" }
+      // 2. CHARAKTER PACK
+      { id: "wilder_junge", name: "Der Wilde Junge", team: "neutral", category: "Charakter Pack", desc: "Wählt am ersten Abend ein Vorbild aus.", count: 0, nightOrder: 4, night1Only: true, actionType: "none" },
+      { id: "fuchs", name: "Der Fuchs", team: "dorf", category: "Charakter Pack", desc: "Beschnüffelt nachts benachbarte Spieler nach Wölfen.", count: 0, nightOrder: 6, night1Only: false, actionType: "inspect" },
+      { id: "floete", name: "Der Flötenspieler", team: "neutral", category: "Charakter Pack", desc: "Verzaubert nachts zwei Personen.", count: 0, nightOrder: 7, night1Only: false, actionType: "none" },
+      { id: "urwolf", name: "Der Urwolf", team: "wolf", category: "Charakter Pack", desc: "Kann einmal das nächtliche Opfer in einen Werwolf verwandeln.", count: 0, nightOrder: 8, night1Only: false, actionType: "wolfKill" },
+      { id: "grosser_wolf", name: "Der Große Böse Wolf", team: "wolf", category: "Charakter Pack", desc: "Darf nachts ein zweites Opfer fressen, solange kein Wolf starb.", count: 0, nightOrder: 8, night1Only: false, actionType: "wolfKill" },
+      { id: "erfinder", name: "Der Erfinder", team: "dorf", category: "Charakter Pack", desc: "Verteilt magische Hilfsmittel an Mitspieler.", count: 0, nightOrder: 11, night1Only: false, actionType: "inventor" },
+      { id: "baer", name: "Der Bärenführer", team: "dorf", category: "Charakter Pack", desc: "Knurrt morgens, wenn ein Wolf neben ihm sitzt.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
+      { id: "ritter", name: "Der Ritter", team: "dorf", category: "Charakter Pack", desc: "Infiziert den linken Wolf beim Gefressenwerden.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
+      { id: "magd", name: "Die Ergebene Magd", team: "dorf", category: "Charakter Pack", desc: "Opfert sich bei Hinrichtung für die Rolle des Opfers.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
+      { id: "richter", name: "Der Stotternde Richter", team: "dorf", category: "Charakter Pack", desc: "Erzwingt eine zweite Abstimmung.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
+      { id: "engel", name: "Der Engel", team: "dorf", category: "Charakter Pack", desc: "Gewinnt sofort allein bei frühem Tod.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
+      { id: "puppe", name: "Der Puppenspieler", team: "neutral", category: "Charakter Pack", desc: "Kontrolliert Stimme oder Aktion eines Spielers.", count: 0, nightOrder: 12, night1Only: false, actionType: "none" },
+      { id: "parasit", name: "Der Parasit", team: "neutral", category: "Charakter Pack", desc: "Fest an ein Wirt-Schicksal gebunden.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
+      { id: "verfluchter", name: "Der Verfluchte", team: "neutral", category: "Charakter Pack", desc: "Wird bei Wolfsbiss sofort zum Werwolf.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
+      { id: "suendenbock", name: "Der Sündenbock", team: "neutral", category: "Charakter Pack", desc: "Stirbt automatisch bei Unentschieden.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
+      { id: "zigeunerin", name: "Die Zigeunerin", team: "neutral", category: "Charakter Pack", desc: "Stellt Fragen an Verstorbene.", count: 0, nightOrder: 14, night1Only: false, actionType: "none" }
     ];
 
-    const activeExpansions = { "Klassik": true, "Add-on": true, "Neumond": true };
+    const activeExpansions = { "Klassik": true, "Charakter Pack": true };
     let currentGuideFilter = "Alle";
     let players = [], assignments = {}, currentPlayerIndex = 0;
     let currentNight = 1;
@@ -296,7 +301,6 @@
     let nightSummary = { victim: null, witchAction: null };
     let recentGames = [];
 
-    // Lade Speicher beim Start
     function loadFromStorage() {
       const savedPlayers = localStorage.getItem('ww_players');
       if (savedPlayers) document.getElementById('playerInput').value = savedPlayers;
@@ -354,31 +358,41 @@
     function resetAllCounts() { availableRoles.forEach(r => r.count = 0); renderRoleConfig(); prepareNightSequence(); saveInputsToStorage(); }
     function getPlayerCount() { return document.getElementById('playerInput').value.split(/,|\n/).map(p => p.trim()).filter(p => p.length > 0).length; }
     function getTotalRolesCount() { let total = 0; availableRoles.forEach(r => { if (activeExpansions[r.category]) total += r.count; }); return total; }
-          function renderRoleConfig() {
+        function renderRoleConfig() {
       const container = document.getElementById('roleConfigContainer');
       container.innerHTML = '';
-      let totalRoles = getTotalRolesCount(), playerCount = getPlayerCount();
-      availableRoles.forEach((role, index) => {
-        if (!activeExpansions[role.category]) return;
-        let teamBadgeText = role.team === 'wolf' ? 'Werwolf' : (role.team === 'neutral' ? 'Neutral' : 'Dorf');
-        container.innerHTML += `
-          <div class="role-config-row">
-            <div>
-              <div class="role-category">${role.category}</div>
-              <div style="font-weight:bold; color: #fff;">${role.name} <span class="team-badge ${role.team}">${teamBadgeText}</span></div>
-            </div>
-            <div class="counter-controls">
-              <button class="count-btn" onclick="updateRoleCount(${index}, -1)">-</button>
-              <span style="width:25px;text-align:center;font-weight:bold;">${role.count}</span>
-              <button class="count-btn" onclick="updateRoleCount(${index}, 1)">+</button>
-            </div>
-          </div>`;
+
+      categoryOrder.forEach(cat => {
+        if (!activeExpansions[cat]) return;
+        const rolesInCat = availableRoles.filter(r => r.category === cat);
+        if (rolesInCat.length === 0) return;
+
+        container.innerHTML += `<div class="dlc-header">📦 ${cat}</div>`;
+
+        rolesInCat.forEach(role => {
+          const globalIndex = availableRoles.findIndex(r => r.id === role.id);
+          let teamBadgeText = role.team === 'wolf' ? 'Werwolf' : (role.team === 'neutral' ? 'Neutral' : 'Dorf');
+          container.innerHTML += `
+            <div class="role-config-row">
+              <div>
+                <div style="font-weight:bold; color: #fff;">${role.name} <span class="team-badge ${role.team}">${teamBadgeText}</span></div>
+              </div>
+              <div class="counter-controls">
+                <button class="count-btn" onclick="updateRoleCount(${globalIndex}, -1)">-</button>
+                <span style="width:25px;text-align:center;font-weight:bold;">${role.count}</span>
+                <button class="count-btn" onclick="updateRoleCount(${globalIndex}, 1)">+</button>
+              </div>
+            </div>`;
+        });
       });
+
       const summary = document.getElementById('countSummary'), startBtn = document.getElementById('startBtn');
+      let totalRoles = getTotalRolesCount(), playerCount = getPlayerCount();
       if (totalRoles === playerCount) { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Perfekt!)`; summary.style.color = 'var(--accent-blue)'; startBtn.disabled = false; }
       else if (totalRoles > playerCount) { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Zu viele!)`; summary.style.color = 'var(--accent-red)'; startBtn.disabled = true; }
       else { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Zu wenig!)`; summary.style.color = 'var(--accent-gold)'; startBtn.disabled = true; }
     }
+
     function updateRoleCount(index, change) {
       if (change > 0 && getTotalRolesCount() >= getPlayerCount()) return;
       if (availableRoles[index].count + change >= 0) { availableRoles[index].count += change; renderRoleConfig(); prepareNightSequence(); saveInputsToStorage(); }
@@ -687,15 +701,22 @@
     function renderGuide() {
       const container = document.getElementById('rolesListContainer');
       container.innerHTML = '';
-      availableRoles.forEach(r => {
-        if (currentGuideFilter !== "Alle" && r.category !== currentGuideFilter) return;
-        let teamBadgeText = r.team === 'wolf' ? 'Werwolf' : (r.team === 'neutral' ? 'Neutral' : 'Dorf');
-        container.innerHTML += `
-          <div class="role-item ${r.team}">
-            <div class="role-category">${r.category}</div>
-            <div class="role-title"><span>${r.name}</span><span class="team-badge ${r.team}">${teamBadgeText}</span></div>
-            <div class="role-desc">${r.desc}</div>
-          </div>`;
+
+      categoryOrder.forEach(cat => {
+        if (currentGuideFilter !== "Alle" && currentGuideFilter !== cat) return;
+        const rolesInCat = availableRoles.filter(r => r.category === cat);
+        if (rolesInCat.length === 0) return;
+
+        container.innerHTML += `<div class="dlc-header">📦 ${cat}</div>`;
+
+        rolesInCat.forEach(r => {
+          let teamBadgeText = r.team === 'wolf' ? 'Werwolf' : (r.team === 'neutral' ? 'Neutral' : 'Dorf');
+          container.innerHTML += `
+            <div class="role-item ${r.team}">
+              <div class="role-title"><span>${r.name}</span><span class="team-badge ${r.team}">${teamBadgeText}</span></div>
+              <div class="role-desc">${r.desc}</div>
+            </div>`;
+        });
       });
     }
     document.addEventListener("DOMContentLoaded", () => { 
