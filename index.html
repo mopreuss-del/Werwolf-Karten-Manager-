@@ -163,12 +163,13 @@
     .role-reveal-box { margin-top: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--accent-gold); border-radius: 12px; padding: 12px; text-align: center; }
   </style>
 </head>
-  <body>
+  
+<body>
 
-  <!-- Splash-Screen mit Versionsnummer v1.9 -->
+  <!-- Splash-Screen mit Versionsnummer v2.0 -->
   <div id="splash">
     <h1>🐺 Werwolf Rollen-Manager</h1>
-    <p>v1.9</p>
+    <p>v2.0</p>
     <button class="splash-btn" onclick="closeSplash()">Loslegen</button>
   </div>
 
@@ -209,8 +210,7 @@
       </div>
       <div class="card" id="setupStatus" style="text-align: center; color: var(--accent-gold);">Bereit</div>
     </div>
-
-    <!-- TAB 2: ROLLEN ZIEHEN -->
+        <!-- TAB 2: ROLLEN ZIEHEN -->
     <div id="tab-distribute" class="section">
       <div class="card" style="text-align: center;">
         <h3 id="currentTurnName">Kein Spieler</h3>
@@ -253,8 +253,7 @@
       </div>
     </div>
   </div>
-    
-  <script>
+    <script>
     const categoryOrder = ["Klassik", "Charakter Pack"];
 
     const availableRoles = [
@@ -299,9 +298,10 @@
     let deadPlayers = [];
     let captain = null;
     let witchState = { healUsed: false, poisonUsed: false };
-    let nightSummary = { victim: null, witchAction: null };
+    let nightSummary = { victim: null, witchAction: null, healed: null, poisonTarget: null };
     let recentGames = [];
-        function loadFromStorage() {
+
+    function loadFromStorage() {
       const savedPlayers = localStorage.getItem('ww_players');
       if (savedPlayers) document.getElementById('playerInput').value = savedPlayers;
       
@@ -327,8 +327,7 @@
       availableRoles.forEach(r => roleCounts[r.id] = r.count);
       localStorage.setItem('ww_roles', JSON.stringify(roleCounts));
     }
-
-    function closeSplash() {
+          function closeSplash() {
       document.getElementById('splash').style.opacity = '0';
       setTimeout(() => document.getElementById('splash').style.display = 'none', 800);
       renderRoleConfig(); renderGuide(); prepareNightSequence();
@@ -411,7 +410,10 @@
       currentNightStepIndex = 0;
       renderCurrentNightStep();
     }
-        function renderCurrentNightStep() {
+
+    let lastInspectedPlayer = null;
+
+    function renderCurrentNightStep() {
       const box = document.getElementById('nightDisplayBox');
       
       if (currentNightStepIndex >= nightSteps.length) {
@@ -430,7 +432,7 @@
             <div class="player-inspect-grid">
               ${players.map(p => `<button class="player-inspect-btn ${lovers.includes(p) ? 'selected' : ''}" onclick="toggleAmorSelection('${p}', this)">${p}</button>`).join('')}
             </div>
-            <p id="amorStatus" style="font-size:0.85rem; color:var(--accent-gold); margin-top:8px; text-align:center;"></p>
+            <p id="amorStatus" style="font-size:0.85rem; color:var(--accent-gold); margin-top:8px; text-align:center;">${lovers.length === 2 ? '✅ Liebespaar bestimmt: ' + lovers[0] + ' & ' + lovers[1] + '!' : ''}</p>
           </div>`;
       }
       if (role.actionType === 'inspect') {
@@ -438,9 +440,11 @@
           <div style="margin-top:15px; border-top:1px solid rgba(211,211,211,0.1); pt:10px;">
             <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">🔍 Wähle einen Spieler zum Untersuchen:</p>
             <div class="player-inspect-grid">
-              ${players.map(p => `<button class="player-inspect-btn" onclick="inspectPlayer('${p}')">👁️ ${p}</button>`).join('')}
+              ${players.map(p => `<button class="player-inspect-btn ${lastInspectedPlayer === p ? 'selected' : ''}" onclick="inspectPlayer('${p}', this)">👁️ ${p}</button>`).join('')}
             </div>
-            <div id="inspectResultContainer"></div>
+            <div id="inspectResultContainer">
+              ${lastInspectedPlayer ? getInspectResultHTML(lastInspectedPlayer) : ''}
+            </div>
           </div>`;
       }
       if (role.actionType === 'wolfKill') {
@@ -448,29 +452,33 @@
           <div style="margin-top:15px; border-top:1px solid rgba(211,211,211,0.1); pt:10px;">
             <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">🐺 Wer wählt das Wolfsopfer?</p>
             <div class="player-inspect-grid">
-              ${players.map(p => `<button class="player-inspect-btn" onclick="setWolfVictim('${p}', this)">🩸 ${p}</button>`).join('')}
+              ${players.map(p => `<button class="player-inspect-btn ${nightSummary.victim === p ? 'selected' : ''}" onclick="setWolfVictim('${p}', this)">🩸 ${p}</button>`).join('')}
             </div>
-            <p id="wolfVictimStatus" style="font-size:0.85rem; color:var(--accent-red); margin-top:8px; text-align:center;"></p>
+            <p id="wolfVictimStatus" style="font-size:0.85rem; color:var(--accent-red); margin-top:8px; text-align:center;">${nightSummary.victim ? '🩸 Wolfsopfer gewählt: ' + nightSummary.victim : ''}</p>
           </div>`;
       }
       if (role.actionType === 'witch') {
+        let actualVictim = nightSummary.healed ? 'Niemand (geheilt)' : (nightSummary.victim || 'Niemand / Unbekannt');
         interactiveHTML = `
           <div style="margin-top:15px; border-top:1px solid rgba(211,211,211,0.1); pt:10px;">
             <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">🧪 Hexen-Tränke:</p>
-            <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:8px;">Das Wolfsopfer dieser Nacht ist: <b>${nightSummary.victim || 'Niemand / Unbekannt'}</b></p>
+            <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:8px;">Das Wolfsopfer dieser Nacht ist: <b>${actualVictim}</b></p>
             <div style="display:flex; flex-direction:column; gap:8px;">
               <button class="btn btn-success" onclick="witchHeal()" ${witchState.healUsed || !nightSummary.victim ? 'disabled' : ''}>
                 ${witchState.healUsed ? 'Heiltrank bereits verwendet' : '💚 Opfer heilen'}
               </button>
               <select id="witchPoisonSelect" style="margin-top:5px;">
                 <option value="">-- Niemanden vergiften --</option>
-                ${players.map(p => `<option value="${p}">Gifttrank auf ${p} anwenden</option>`).join('')}
+                ${players.map(p => `<option value="${p}" ${nightSummary.poisonTarget === p ? 'selected' : ''}>Gifttrank auf ${p} anwenden</option>`).join('')}
               </select>
               <button class="btn btn-danger" onclick="witchPoison()" ${witchState.poisonUsed ? 'disabled' : ''}>
                 ${witchState.poisonUsed ? 'Gifttrank bereits verwendet' : '☠️ Gifttrank nutzen'}
               </button>
             </div>
-            <p id="witchStatus" style="font-size:0.85rem; color:var(--accent-gold); margin-top:8px; text-align:center;"></p>
+            <p id="witchStatus" style="font-size:0.85rem; color:var(--accent-gold); margin-top:8px; text-align:center;">
+              ${witchState.healUsed && nightSummary.healed ? '💚 Opfer wurde geheilt! ' : ''}
+              ${witchState.poisonUsed && nightSummary.poisonTarget ? '☠️ Gift auf ' + nightSummary.poisonTarget : ''}
+            </p>
           </div>`;
       }
 
@@ -507,16 +515,22 @@
       }
     }
 
-    function inspectPlayer(playerName) {
+    function getInspectResultHTML(playerName) {
       const targetRole = assignments[playerName];
       let teamBadgeText = targetRole.team === 'wolf' ? 'Werwolf' : (targetRole.team === 'neutral' ? 'Neutral' : 'Dorf');
-      const container = document.getElementById('inspectResultContainer');
-      container.innerHTML = `
+      return `
         <div class="role-reveal-box">
           <div style="font-size:0.85rem; color:var(--text-sub);">${playerName} ist:</div>
           <div style="font-size:1.3rem; font-weight:bold; color:var(--accent-gold); margin:4px 0;">${targetRole.name}</div>
           <span class="team-badge ${targetRole.team}">${teamBadgeText}</span>
         </div>`;
+    }
+
+    function inspectPlayer(playerName, btn) {
+      lastInspectedPlayer = playerName;
+      document.querySelectorAll('#nightDisplayBox .player-inspect-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('inspectResultContainer').innerHTML = getInspectResultHTML(playerName);
     }
 
     function setWolfVictim(playerName, btn) {
@@ -628,6 +642,7 @@
     function finishDayAndNextNight() {
       currentNight++;
       nightSummary = { victim: null, witchAction: null, healed: null, poisonTarget: null };
+      lastInspectedPlayer = null;
       prepareNightSequence();
     }
 
@@ -636,6 +651,8 @@
       deadPlayers = [];
       lovers = [];
       captain = null;
+      lastInspectedPlayer = null;
+      nightSummary = { victim: null, witchAction: null, healed: null, poisonTarget: null };
       prepareNightSequence();
     }
 
@@ -661,6 +678,8 @@
       deadPlayers = [];
       lovers = [];
       captain = null;
+      lastInspectedPlayer = null;
+      nightSummary = { victim: null, witchAction: null, healed: null, poisonTarget: null };
       document.getElementById('setupStatus').innerText = `✅ Rollen verteilt! Wechsel zu Reiter 2.`;
       loadCurrentPlayer();
       prepareNightSequence();
@@ -691,7 +710,7 @@
       document.getElementById('assignedRoleDesc').innerText = assignments[playerName].desc;
     }
     function revealRole() { document.getElementById('hiddenCover').classList.add('revealed'); }
-    function nextPlayer() {
+      function nextPlayer() {
       const cover = document.getElementById('hiddenCover');
       cover.style.transition = 'none'; cover.classList.remove('revealed');
       currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
