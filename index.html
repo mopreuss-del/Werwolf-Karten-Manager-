@@ -63,7 +63,8 @@
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); 
       display: flex; flex-direction: column; gap: 12px; 
     }
-       h3 { color: var(--accent-gold); font-size: 1.3rem; }
+
+    h3 { color: var(--accent-gold); font-size: 1.3rem; }
 
     textarea, input, select { 
       width: 100%; padding: 12px 16px; border-radius: 12px; 
@@ -116,7 +117,8 @@
       background: var(--accent-red); color: var(--text-main); font-weight: bold; font-size: 1.1rem; 
       cursor: pointer; display: flex; justify-content: center; align-items: center; 
     }
-        .secret-card { 
+
+    .secret-card { 
       background: linear-gradient(135deg, #222440, #111222); 
       border: 2px dashed var(--accent-gold); text-align: center; padding: 30px 20px; 
       border-radius: 16px; position: relative; overflow: hidden; min-height: 180px; 
@@ -161,7 +163,7 @@
     .role-reveal-box { margin-top: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--accent-gold); border-radius: 12px; padding: 12px; text-align: center; }
   </style>
 </head>
-<body>
+  <body>
 
   <!-- Splash-Screen mit Versionsnummer v1.9 -->
   <div id="splash">
@@ -169,7 +171,8 @@
     <p>v1.9</p>
     <button class="splash-btn" onclick="closeSplash()">Loslegen</button>
   </div>
-    <div class="container">
+
+  <div class="container">
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('setup', this)">1. Setup</button>
       <button class="tab-btn" onclick="switchTab('distribute', this)">2. Rollen</button>
@@ -249,8 +252,9 @@
         <div id="rolesListContainer" style="margin-top: 10px;"></div>
       </div>
     </div>
-    </div>
-    <script>
+  </div>
+    
+  <script>
     const categoryOrder = ["Klassik", "Charakter Pack"];
 
     const availableRoles = [
@@ -297,8 +301,7 @@
     let witchState = { healUsed: false, poisonUsed: false };
     let nightSummary = { victim: null, witchAction: null };
     let recentGames = [];
-
-    function loadFromStorage() {
+        function loadFromStorage() {
       const savedPlayers = localStorage.getItem('ww_players');
       if (savedPlayers) document.getElementById('playerInput').value = savedPlayers;
       
@@ -324,7 +327,8 @@
       availableRoles.forEach(r => roleCounts[r.id] = r.count);
       localStorage.setItem('ww_roles', JSON.stringify(roleCounts));
     }
-      function closeSplash() {
+
+    function closeSplash() {
       document.getElementById('splash').style.opacity = '0';
       setTimeout(() => document.getElementById('splash').style.display = 'none', 800);
       renderRoleConfig(); renderGuide(); prepareNightSequence();
@@ -374,7 +378,7 @@
               <div>
                 <div style="font-weight:bold; color: #fff;">${role.name} <span class="team-badge ${role.team}">${teamBadgeText}</span></div>
               </div>
-               <div class="counter-controls">
+              <div class="counter-controls">
                 <button class="count-btn" onclick="updateRoleCount(${globalIndex}, -1)">-</button>
                 <span style="width:25px;text-align:center;font-weight:bold;">${role.count}</span>
                 <button class="count-btn" onclick="updateRoleCount(${globalIndex}, 1)">+</button>
@@ -407,8 +411,7 @@
       currentNightStepIndex = 0;
       renderCurrentNightStep();
     }
-
-    function renderCurrentNightStep() {
+        function renderCurrentNightStep() {
       const box = document.getElementById('nightDisplayBox');
       
       if (currentNightStepIndex >= nightSteps.length) {
