@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Werwolf Rollen-Manager</title>
+  <style>
+    :root {
+      --bg-color: #0b0d17;
+      --card-bg: rgba(23, 27, 48, 0.85);
+      --accent-gold: #ffb703;
+      --accent-red: #e63946;
+      --accent-blue: #4cc9f0;
+      --accent-green: #2a9d8f;
+      --accent-purple: #7209b7;
+      --text-main: #f8f9fa;
+      --text-sub: #a0aab8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: radial-gradient(circle at top, #1a1c2e, #0b0d17); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 15px; }
+    #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #080911; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; transition: opacity 0.8s ease, visibility 0.8s; padding: 20px; text-align: center; }
+    #splash h1 { font-size: 2.3rem; color: var(--accent-gold); text-shadow: 0 0 20px rgba(255, 183, 3, 0.6); margin-bottom: 10px; }
+    #splash p { color: var(--text-sub); font-size: 1.1rem; margin-bottom: 30px; }
+    .splash-btn { padding: 14px 32px; background: linear-gradient(45deg, #e63946, #7209b7); border: none; border-radius: 30px; color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px rgba(230, 57, 70, 0.5); }
+    .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 20px; margin-top: 10px; }
+    .tabs { display: flex; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 20px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-sub); font-weight: bold; border-radius: 15px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
+    .tab-btn.active { background: var(--accent-gold); color: #000; }
+    .section { display: none; flex-direction: column; gap: 15px; }
+    .section.active { display: flex; }
+    .card { background: var(--card-bg); border-radius: 16px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; gap: 12px; }
+    h3 { color: var(--accent-gold); font-size: 1.3rem; }
+    textarea, input, select { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; font-size: 1rem; outline: none; }
+    textarea { resize: vertical; }
+    .btn { padding: 12px 20px; background: linear-gradient(45deg, var(--accent-gold), #f77f00); border: none; border-radius: 12px; color: #000; font-weight: bold; font-size: 1rem; cursor: pointer; text-align: center; box-shadow: 0 0 10px rgba(255, 183, 3, 0.3); }
+    .btn:disabled { background: rgba(255,255,255,0.1); color: #666; cursor: not-allowed; box-shadow: none; }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: white; font-size: 0.9rem; padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; }
+    .expansion-toggles { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 5px; }
+    .exp-toggle-btn { flex: 1; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: var(--text-sub); font-size: 0.85rem; font-weight: bold; cursor: pointer; text-align: center; }
+    .exp-toggle-btn.active { background: var(--accent-purple); color: white; border-color: var(--accent-purple); box-shadow: 0 0 10px rgba(114, 9, 183, 0.4); }
+    .role-config-list { display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; padding-right: 5px; }
+    .role-config-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 10px; }
+    .counter-controls { display: flex; align-items: center; gap: 10px; }
+    .count-btn { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--accent-purple); color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+    .secret-card { background: linear-gradient(135deg, #1f243d, #0f1322); border: 2px dashed var(--accent-purple); text-align: center; padding: 30px 20px; border-radius: 16px; position: relative; overflow: hidden; min-height: 180px; display: flex; flex-direction: column; justify-content: center; }
+    .secret-result { font-size: 1.8rem; color: var(--accent-gold); font-weight: bold; margin: 10px 0; text-shadow: 0 0 10px rgba(255,183,3,0.4); }
+    .hidden-cover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111425; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: none; cursor: pointer; padding: 20px; z-index: 10; }
+    .hidden-cover.revealed { transform: translateY(-100%); pointer-events: none; transition: transform 0.4s ease; }
+    
+    /* Farben für die Teams im Lexikon und Setup */
+    .role-item { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border-left: 5px solid var(--accent-blue); margin-bottom: 8px; }
+    .role-item.dorf { border-left-color: var(--accent-green); }
+    .role-item.wolf { border-left-color: var(--accent-red); }
+    .role-item.neutral { border-left-color: var(--accent-purple); }
+    
+    .team-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; margin-left: 6px; }
+    .team-badge.dorf { background: rgba(42, 157, 143, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .team-badge.wolf { background: rgba(230, 57, 70, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); }
+    .team-badge.neutral { background: rgba(114, 9, 183, 0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+
+    .role-title { font-weight: bold; font-size: 1.1rem; color: #fff; display: flex; align-items: center; justify-content: space-between; }
+    .role-desc { font-size: 0.9rem; color: var(--text-sub); margin-top: 6px; line-height: 1.3; }
+    .role-category { font-size: 0.75rem; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 2px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <h1>🐺 Werwolf Rollen-Manager</h1>
+    <p>Alle Erweiterungen & Farb-Lexikon</p>
+    <button class="splash-btn" onclick="closeSplash()">Loslegen</button>
+  </div>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('setup', this)">1. Setup</button>
+      <button class="tab-btn" onclick="switchTab('distribute', this)">2. Rollen ziehen</button>
+      <button class="tab-btn" onclick="switchTab('guide', this)">3. Lexikon</button>
+    </div>
+
+    <div id="tab-setup" class="section active">
+      <div class="card">
+        <h3>1. Spielernamen eingeben</h3>
+        <textarea id="playerInput" rows="3">Moritz, Anna, Jonas, Lisa, Lukas</textarea>
+      </div>
+
+      <div class="card">
+        <h3>✨ Eigene Rolle erstellen</h3>
+        <input type="text" id="customRoleName" placeholder="Rollenname">
+        <select id="customRoleTeam">
+          <option value="wolf">Werwolf-Team (Rot)</option>
+          <option value="dorf">Dorf-Team (Grün)</option>
+          <option value="neutral">Neutrales Team (Lila)</option>
+        </select>
+        <textarea id="customRoleDesc" placeholder="Beschreibung..." rows="2"></textarea>
+        <button class="btn-secondary" onclick="addCustomRole()">Rolle hinzufügen</button>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+          <h3>2. Rollen auswählen</h3>
+          <button class="btn-secondary" onclick="resetAllCounts()">Alle auf 0</button>
+        </div>
+        <div class="expansion-toggles">
+          <button class="exp-toggle-btn active" id="toggle-Klassik" onclick="toggleExpansion('Klassik')">Klassik</button>
+          <button class="exp-toggle-btn active" id="toggle-Add-on" onclick="toggleExpansion('Add-on')">Add-on</button>
+          <button class="exp-toggle-btn active" id="toggle-Neumond" onclick="toggleExpansion('Neumond')">Neumond</button>
+          <button class="exp-toggle-btn active" id="toggle-Selbstgemachte" onclick="toggleExpansion('Selbstgemachte')">Selbstgemachte</button>
+        </div>
+        <div class="role-config-list" id="roleConfigContainer"></div>
+        <div id="countSummary" style="font-size: 0.9rem; font-weight: bold; color: var(--accent-gold); text-align: center; margin-top: 5px;"></div>
+        <button id="startBtn" class="btn" onclick="initGame()" style="margin-top: 10px;">Spiel starten & Mischen</button>
+      </div>
+      <div class="card" id="setupStatus" style="text-align: center; color: var(--accent-gold);">Bereit</div>
+    </div>
+
+    <div id="tab-distribute" class="section">
+      <div class="card" style="text-align: center;">
+        <h3 id="currentTurnName">Kein Spieler</h3>
+        <div class="secret-card" id="secretCardBox">
+          <div class="hidden-cover" id="hiddenCover" onclick="revealRole()">
+            <span style="font-size: 1.5rem; margin-bottom: 10px;">🔒</span>
+            <b>Tippe hier zum Aufdecken!</b>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-sub);">Deine geheime Rolle:</p>
+          <div class="secret-result" id="assignedRoleName">-</div>
+          <p id="assignedRoleDesc" style="font-size: 0.9rem; color: var(--text-main);">-</p>
+        </div>
+        <button class="btn" onclick="nextPlayer()" style="margin-top: 15px;">Nächster Spieler & verbergen</button>
+      </div>
+    </div>
+
+    <div id="tab-guide" class="section">
+      <div class="card">
+        <h3>Rollen-Lexikon</h3>
+        <p style="font-size: 0.85rem; color: var(--text-sub);">Wähle aus, welche Erweiterung du sehen möchtest:</p>
+        
+        <div class="expansion-toggles" style="margin-top: 5px;">
+          <button class="exp-toggle-btn active" id="guide-filter-Alle" onclick="filterGuide('Alle', this)">Alle</button>
+          <button class="exp-toggle-btn" id="guide-filter-Klassik" onclick="filterGuide('Klassik', this)">Klassik</button>
+          <button class="exp-toggle-btn" id="guide-filter-Add-on" onclick="filterGuide('Add-on', this)">Add-on</button>
+          <button class="exp-toggle-btn" id="guide-filter-Neumond" onclick="filterGuide('Neumond', this)">Neumond</button>
+          <button class="exp-toggle-btn" id="guide-filter-Selbstgemachte" onclick="filterGuide('Selbstgemachte', this)">Selbstgem.</button>
+        </div>
+
+        <div id="rolesListContainer" style="margin-top: 10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const availableRoles = [
+      // KLASSIK
+      { id: "seherin", name: "Die Seherin", team: "dorf", category: "Klassik", desc: "Darf jede Nacht die wahre Identität eines Spielers erfahren.", count: 1 },
+      { id: "werwolf", name: "Normaler Werwolf", team: "wolf", category: "Klassik", desc: "Tötet nachts gemeinsam mit den anderen Werwölfen ein Dorfmitglied.", count: 1 },
+      { id: "dorfbewohner", name: "Einfacher Dorfbewohner", team: "dorf", category: "Klassik", desc: "Hat keine Spezialfähigkeit, versucht tagsüber die Werwölfe zu entlarven.", count: 2 },
+      { id: "hexe", name: "Die Hexe", team: "dorf", category: "Klassik", desc: "Besitzt einen Heiltrank und einen Gifttrank.", count: 0 },
+      { id: "jaeger", name: "Der Jäger", team: "dorf", category: "Klassik", desc: "Nimmt beim eigenen Tod sofort einen anderen Spieler mit in den Abgrund.", count: 0 },
+      { id: "amor", name: "Amor", team: "dorf", category: "Klassik", desc: "Bestimmt in der 1. Nacht zwei Verliebte, die zusammen gewinnen oder sterben.", count: 0 },
+      { id: "dieb", name: "Der Dieb", team: "dorf", category: "Klassik", desc: "Wählt zu Spielbeginn eine von zwei übrig gebliebenen Rollen aus.", count: 0 },
+      { id: "hauptmann", name: "Der Hauptmann", team: "dorf", category: "Klassik", desc: "Wird vom Dorf gewählt; seine Stimme zählt bei Abstimmungen doppelt.", count: 0 },
+      { id: "schlafendes_maedchen", name: "Das Kleine Mädchen", team: "dorf", category: "Klassik", desc: "Darf nachts heimlich blinzeln, um die Werwölfe bei der Arbeit zu beobachten.", count: 0 },
+
+      // CHARAKTER ADD-ON
+      { id: "baer", name: "Der Bärenführer", team: "dorf", category: "Add-on", desc: "Knurrt morgens, wenn ein Werwolf direkt neben dir sitzt.", count: 1 },
+      { id: "ritter", name: "Der Ritter mit der rostigen Klinge", team: "dorf", category: "Add-on", desc: "Fressen dich Wölfe, stirbt der linke Wolf in der nächsten Nacht.", count: 0 },
+      { id: "fuchs", name: "Der Fuchs", team: "dorf", category: "Add-on", desc: "Prüft 3 Spieler nach Wölfen. Bei Erfolg darf er weitersuchen.", count: 0 },
+      { id: "magd", name: "Die Ergebene Magd", team: "dorf", category: "Add-on", desc: "Kann sich vor einer Hinrichtung opfern und die Rolle des Opfers annehmen.", count: 0 },
+      { id: "erfinder", name: "Der Erfinder", team: "dorf", category: "Add-on", desc: "Verteilt magische Hilfsmittel (Teleskop, Schild, Trank).", count: 0 },
+      { id: "richter", name: "Der Stotternde Richter", team: "dorf", category: "Add-on", desc: "Kann einmalig eine zweite Abstimmung erzwingen.", count: 0 },
+      { id: "engel", name: "Der Engel", team: "dorf", category: "Add-on", desc: "Gewinnt sofort, wenn er in Nacht 1 gefressen oder Tag 1 gelyncht wird.", count: 0 },
+      { id: "urwolf", name: "Der Urwolf", team: "wolf", category: "Add-on", desc: "Kann einmal das Wolfsopfer in einen Werwolf verwandeln.", count: 0 },
+      { id: "grosser_wolf", name: "Der Große Böse Wolf", team: "wolf", category: "Add-on", desc: "Darf ein 2. Opfer fressen, solange kein Wolf gestorben ist.", count: 0 },
+      { id: "floete", name: "Der Flötenspieler", team: "neutral", category: "Add-on", desc: "Verzaubert nachts Spieler. Gewinnt, wenn alle verzaubert sind.", count: 0 },
+      { id: "puppe", name: "Der Puppenspieler", team: "neutral", category: "Add-on", desc: "Kontrolliert die Stimme oder Fähigkeit eines Spielers.", count: 0 },
+      { id: "parasit", name: "Der Parasit", team: "neutral", category: "Add-on", desc: "Nistet sich bei einem Wirt ein und teilt dessen Schicksal.", count: 0 },
+      { id: "verfluchter", name: "Der Verfluchte", team: "neutral", category: "Add-on", desc: "Wird bei Wolfsbiss selbst zum Werwolf.", count: 0 },
+      { id: "wilder_junge", name: "Der Wilde Junge", team: "neutral", category: "Add-on", desc: "Wählt ein Vorbild. Stirbt es, wird er zum Werwolf.", count: 0 },
+      { id: "suendenbock", name: "Der Sündenbock", team: "neutral", category: "Add-on", desc: "Stirbt bei Unentschieden automatisch bei Abstimmungen.", count: 0 },
+      { id: "zigeunerin", name: "Die Zigeunerin", team: "neutral", category: "Add-on", desc: "Ermöglicht Fragen an verstorbene Spieler.", count: 0 },
+
+      // NEUMOND
+      { id: "weiser_wolf", name: "Der Weiße Wolf", team: "wolf", category: "Neumond", desc: "Kann heimlich andere Wölfe töten, um allein zu gewinnen.", count: 0 },
+      { id: "wolfshund", name: "Der Wolfshund", team: "neutral", category: "Neumond", desc: "Wählt am 1. Abend seine Gesinnung (Dorf oder Wolf).", count: 0 },
+      { id: "brandpyromane", name: "Der Brandstifter", team: "neutral", category: "Neumond", desc: "Kann Ziele oder Häuser anzünden.", count: 0 },
+      { id: "gaukler", name: "Der Gaukler", team: "dorf", category: "Neumond", desc: "Bringt durch Event-Karten neue Regeln ins Spiel.", count: 0 },
+
+      // SELBSTGEMACHTE (Aus deinen Bildern)
+      { id: "schattenmoerder", name: "Der Schattenmörder", team: "wolf", category: "Selbstgemachte", desc: "Du kannst jede Nacht eine Person töten. Stirbt die Person, darfst du eine weitere Person auswählen, die ebenfalls stirbt.", count: 0 },
+      { id: "seelenbinder", name: "Der Seelenbinder", team: "neutral", category: "Selbstgemachte", desc: "Du wählst zwei Personen aus. Diese arbeiten bis zum Spielende zusammen.", count: 0 },
+      { id: "bluthexe", name: "Die Bluthexe", team: "wolf", category: "Selbstgemachte", desc: "Du kannst jede Nacht eine Person töten und eine geheime Verbindung eingehen.", count: 0 },
+      { id: "puppenspieler_custom", name: "Der Puppenspieler", team: "neutral", category: "Selbstgemachte", desc: "Du verwickelst jemanden in einen Pakt, der dir bei Abstimmungen helfen muss.", count: 0 },
+      { id: "fluchbringer", name: "Der Fluchbringer", team: "dorf", category: "Selbstgemachte", desc: "Verflucht eine Person, die dadurch eine Fähigkeit verliert.", count: 0 },
+      { id: "spiegel_dieb", name: "Der Spiegel-Dieb", team: "dorf", category: "Selbstgemachte", desc: "Kann einmal pro Spiel die Fähigkeit einer anderen Person kopieren.", count: 0 },
+      { id: "verfuehrer", name: "Der Verführer", team: "neutral", category: "Selbstgemachte", desc: "Wählt eine Person, die ihn am nächsten Tag verteidigen muss.", count: 0 },
+      { id: "doppelgaenger", name: "Der Doppelgänger", team: "wolf", category: "Selbstgemachte", desc: "Kann einmal pro Spiel die Rolle einer anderen Person übernehmen.", count: 0 },
+      { id: "seelenraeuber", name: "Der Seelenräuber", team: "wolf", category: "Selbstgemachte", desc: "Tötet nachts zwei Personen und behält eine Karte.", count: 0 },
+      { id: "paktierer", name: "Der Paktierer", team: "neutral", category: "Selbstgemachte", desc: "Schließt einen Pakt. Stirbt der Partner, stirbt man mit.", count: 0 },
+      { id: "gestaltwandlerin", name: "Die Gestaltwandlerin", team: "dorf", category: "Selbstgemachte", desc: "Nimmt jede Nacht die Gestalt und Fähigkeiten eines anderen an.", count: 0 },
+      { id: "fluchbrecher", name: "Der Fluchbrecher", team: "neutral", category: "Selbstgemachte", desc: "Kann einmal pro Spiel einen Fluch oder Schutz aufheben.", count: 0 },
+      { id: "doppelgaengerin", name: "Die Doppelgängerin", team: "dorf", category: "Selbstgemachte", desc: "Übernimmt die Rolle eines bereits ausgeschiedenen Spielers.", count: 0 },
+      { id: "chaosbringer", name: "Der Chaosbringer", team: "neutral", category: "Selbstgemachte", desc: "Gewinnt, wenn niemand mehr lebt außer ihm.", count: 0 }
+    ];
+
+    const activeExpansions = { "Klassik": true, "Add-on": true, "Neumond": true, "Selbstgemachte": true };
+    let currentGuideFilter = "Alle";
+    let players = [], assignments = {}, currentPlayerIndex = 0;
+
+    function closeSplash() {
+      document.getElementById('splash').style.opacity = '0';
+      setTimeout(() => document.getElementById('splash').style.display = 'none', 800);
+      renderRoleConfig(); renderGuide();
+    }
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+    function toggleExpansion(expName) {
+      activeExpansions[expName] = !activeExpansions[expName];
+      const btn = document.getElementById('toggle-' + expName);
+      if (activeExpansions[expName]) { btn.classList.add('active'); }
+      else { btn.classList.remove('active'); availableRoles.forEach(r => { if (r.category === expName) r.count = 0; }); }
+      renderRoleConfig(); renderGuide();
+    }
+    function filterGuide(category, btn) {
+      currentGuideFilter = category;
+      document.querySelectorAll('#tab-guide .exp-toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderGuide();
+    }
+    function addCustomRole() {
+      const name = document.getElementById('customRoleName').value.trim();
+      const team = document.getElementById('customRoleTeam').value;
+      const desc = document.getElementById('customRoleDesc').value.trim();
+      if (!name) { alert("Bitte gib einen Namen ein!"); return; }
+      
+      availableRoles.push({
+        id: "custom_" + Date.now(),
+        name: name,
+        team: team,
+        category: "Selbstgemachte",
+        desc: desc || "Keine Beschreibung angegeben.",
+        count: 1
+      });
+      document.getElementById('customRoleName').value = "";
+      document.getElementById('customRoleDesc').value = "";
+      activeExpansions["Selbstgemachte"] = true;
+      document.getElementById('toggle-Selbstgemachte').classList.add('active');
+      renderRoleConfig(); renderGuide();
+      alert(`Rolle "${name}" wurde hinzugefügt!`);
+    }
+    function resetAllCounts() { availableRoles.forEach(r => r.count = 0); renderRoleConfig(); }
+    function getPlayerCount() { return document.getElementById('playerInput').value.split(/,|\n/).map(p => p.trim()).filter(p => p.length > 0).length; }
+    function getTotalRolesCount() { let total = 0; availableRoles.forEach(r => { if (activeExpansions[r.category]) total += r.count; }); return total; }
+    
+    function renderRoleConfig() {
+      const container = document.getElementById('roleConfigContainer');
+      container.innerHTML = '';
+      let totalRoles = getTotalRolesCount(), playerCount = getPlayerCount();
+      availableRoles.forEach((role, index) => {
+        if (!activeExpansions[role.category]) return;
+        
+        let teamBadgeText = role.team === 'wolf' ? 'Werwolf' : (role.team === 'neutral' ? 'Neutral' : 'Dorf');
+        
+        container.innerHTML += `
+          <div class="role-config-row">
+            <div>
+              <div class="role-category">${role.category}</div>
+              <div style="font-weight:bold; color: #fff;">
+                ${role.name} 
+                <span class="team-badge ${role.team}">${teamBadgeText}</span>
+              </div>
+            </div>
+            <div class="counter-controls">
+              <button class="count-btn" onclick="updateRoleCount(${index}, -1)">-</button>
+              <span style="width:25px;text-align:center;font-weight:bold;">${role.count}</span>
+              <button class="count-btn" onclick="updateRoleCount(${index}, 1)">+</button>
+            </div>
+          </div>`;
+      });
+      const summary = document.getElementById('countSummary'), startBtn = document.getElementById('startBtn');
+      if (totalRoles === playerCount) { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Perfekt!)`; summary.style.color = 'var(--accent-blue)'; startBtn.disabled = false; }
+      else if (totalRoles > playerCount) { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Zu viele!)`; summary.style.color = 'var(--accent-red)'; startBtn.disabled = true; }
+      else { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Zu wenig!)`; summary.style.color = 'var(--accent-gold)'; startBtn.disabled = true; }
+    }
+    function updateRoleCount(index, change) {
+      if (change > 0 && getTotalRolesCount() >= getPlayerCount()) return;
+      if (availableRoles[index].count + change >= 0) { availableRoles[index].count += change; renderRoleConfig(); }
+    }
+    function initGame() {
+      players = document.getElementById('playerInput').value.split(/,|\n/).map(p => p.trim()).filter(p => p.length > 0);
+      let rolePool = [];
+      availableRoles.forEach(role => { if (activeExpansions[role.category]) { for (let i = 0; i < role.count; i++) rolePool.push(role); } });
+      if (rolePool.length !== players.length) return;
+      let shuffledRoles = [...rolePool].sort(() => Math.random() - 0.5);
+      assignments = {};
+      players.forEach((player, index) => { assignments[player] = shuffledRoles[index]; });
+      currentPlayerIndex = 0;
+      document.getElementById('setupStatus').innerText = `✅ Rollen verteilt! Wechsel zu Reiter 2.`;
+      loadCurrentPlayer();
+    }
+    function loadCurrentPlayer() {
+      if (players.length === 0) return;
+      const playerName = players[currentPlayerIndex];
+      document.getElementById('currentTurnName').innerText = `Handy an: ${playerName}`;
+      document.getElementById('assignedRoleName').innerText = assignments[playerName].name;
+      document.getElementById('assignedRoleDesc').innerText = assignments[playerName].desc;
+    }
+    function revealRole() { document.getElementById('hiddenCover').classList.add('revealed'); }
+    function nextPlayer() {
+      const cover = document.getElementById('hiddenCover');
+      cover.style.transition = 'none'; cover.classList.remove('revealed');
+      currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      loadCurrentPlayer();
+      setTimeout(() => { cover.style.transition = 'transform 0.4s ease'; }, 50);
+    }
+    function renderGuide() {
+      const container = document.getElementById('rolesListContainer');
+      container.innerHTML = '';
+      availableRoles.forEach(r => {
+        if (currentGuideFilter !== "Alle" && r.category !== currentGuideFilter) return;
+        let teamBadgeText = r.team === 'wolf' ? 'Werwolf' : (r.team === 'neutral' ? 'Neutral' : 'Dorf');
+        
+        container.innerHTML += `
+          <div class="role-item ${r.team}">
+            <div class="role-category">${r.category}</div>
+            <div class="role-title">
+              <span>${r.name}</span>
+              <span class="team-badge ${r.team}">${teamBadgeText}</span>
+            </div>
+            <div class="role-desc">${r.desc}</div>
+          </div>`;
+      });
+    }
+    document.addEventListener("DOMContentLoaded", () => { document.getElementById('playerInput').addEventListener('input', renderRoleConfig); });
+  </script>
+</body>
+</html>
