@@ -6,21 +6,21 @@
   <title>Werwolf Rollen-Manager</title>
   <style>
     :root {
-      --bg-color: #0b0d17;
-      --card-bg: rgba(23, 27, 48, 0.9);
-      --accent-gold: #ffb703;
-      --accent-red: #e63946;
-      --accent-blue: #4cc9f0;
-      --accent-green: #2a9d8f;
-      --accent-purple: #7209b7;
-      --text-main: #f8f9fa;
-      --text-sub: #a0aab8;
+      --bg-color: #1A1B2F;         /* Nachtblau */
+      --card-bg: rgba(26, 27, 47, 0.95);
+      --accent-red: #8B0000;        /* Blutrot */
+      --text-main: #D3D3D3;         /* Silbergrau */
+      --text-sub: #A0A0B0;          /* Mattes Silbergrau */
+      --accent-gold: #F4D03F;       /* Mondgelb */
+      --accent-green: #1E3A2B;      /* Waldgrün */
+      --accent-purple: #4A154B;     /* Mystisches Dunkelviolett */
+      --accent-blue: #2B4C7E;       /* Nachtblau-Kontrast */
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     
     body { 
-      background: radial-gradient(circle at top, #1a1c2e, var(--bg-color)); 
+      background: radial-gradient(circle at top, #282A4A, var(--bg-color)); 
       color: var(--text-main); 
       min-height: 100vh; 
       display: flex; 
@@ -31,25 +31,25 @@
 
     #splash { 
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: #080911; 
+      background: #111222; 
       display: flex; flex-direction: column; justify-content: center; align-items: center; 
       z-index: 200; transition: opacity 0.8s ease, visibility 0.8s; padding: 20px; text-align: center; 
     }
-    #splash h1 { font-size: 2.3rem; color: var(--accent-gold); text-shadow: 0 0 20px rgba(255, 183, 3, 0.6); margin-bottom: 10px; }
+    #splash h1 { font-size: 2.3rem; color: var(--accent-gold); text-shadow: 0 0 20px rgba(244, 208, 63, 0.4); margin-bottom: 10px; }
     #splash p { color: var(--text-sub); font-size: 1.1rem; margin-bottom: 30px; }
     
     .splash-btn { 
       padding: 14px 32px; 
       background: linear-gradient(45deg, var(--accent-red), var(--accent-purple)); 
-      border: none; border-radius: 30px; color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer; 
-      box-shadow: 0 0 15px rgba(230, 57, 70, 0.5); 
+      border: 1px solid var(--accent-gold); border-radius: 30px; color: var(--text-main); font-size: 1.2rem; font-weight: bold; cursor: pointer; 
+      box-shadow: 0 0 15px rgba(139, 0, 0, 0.6); 
     }
 
     .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 20px; margin-top: 10px; }
 
-    .tabs { display: flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 20px; overflow-x: auto; }
+    .tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 20px; overflow-x: auto; border: 1px solid rgba(211,211,211,0.1); }
     .tab-btn { flex: 1; padding: 10px 8px; border: none; background: transparent; color: var(--text-sub); font-weight: bold; border-radius: 15px; cursor: pointer; font-size: 0.85rem; transition: 0.3s; white-space: nowrap; }
-    .tab-btn.active { background: var(--accent-gold); color: #000; }
+    .tab-btn.active { background: var(--accent-gold); color: #111222; }
 
     .section { display: none; flex-direction: column; gap: 15px; }
     .section.active { display: flex; }
@@ -58,8 +58,8 @@
       background: var(--card-bg); 
       border-radius: 16px; 
       padding: 20px; 
-      border: 1px solid rgba(255, 255, 255, 0.08); 
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); 
+      border: 1px solid rgba(244, 208, 63, 0.15); 
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); 
       display: flex; flex-direction: column; gap: 12px; 
     }
 
@@ -67,35 +67,35 @@
 
     textarea, input, select { 
       width: 100%; padding: 12px 16px; border-radius: 12px; 
-      border: 1px solid rgba(255,255,255,0.1); 
-      background: rgba(255,255,255,0.05); 
-      color: white; font-size: 1rem; outline: none; 
+      border: 1px solid rgba(211,211,211,0.2); 
+      background: rgba(0,0,0,0.3); 
+      color: var(--text-main); font-size: 1rem; outline: none; 
     }
     textarea { resize: vertical; }
 
     .btn { 
       padding: 12px 20px; 
-      background: linear-gradient(45deg, var(--accent-gold), #f77f00); 
-      border: none; border-radius: 12px; color: #000; font-weight: bold; font-size: 1rem; 
-      cursor: pointer; text-align: center; box-shadow: 0 0 10px rgba(255, 183, 3, 0.3); 
+      background: linear-gradient(45deg, var(--accent-red), #A00000); 
+      border: 1px solid var(--accent-gold); border-radius: 12px; color: var(--text-main); font-weight: bold; font-size: 1rem; 
+      cursor: pointer; text-align: center; box-shadow: 0 0 12px rgba(139, 0, 0, 0.4); 
     }
-    .btn:disabled { background: rgba(255,255,255,0.1); color: #666; cursor: not-allowed; box-shadow: none; }
+    .btn:disabled { background: rgba(255,255,255,0.05); color: #555; cursor: not-allowed; box-shadow: none; border-color: transparent; }
 
     .btn-secondary { 
-      background: rgba(255,255,255,0.1); color: white; font-size: 0.9rem; 
-      padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; 
+      background: rgba(211,211,211,0.1); color: var(--text-main); font-size: 0.9rem; 
+      padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(211,211,211,0.2); cursor: pointer; 
     }
-    .btn-danger { background: var(--accent-red); color: white; }
-    .btn-success { background: var(--accent-green); color: white; }
+    .btn-danger { background: var(--accent-red); color: var(--text-main); }
+    .btn-success { background: var(--accent-green); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
 
     .expansion-toggles { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 5px; }
     .exp-toggle-btn { 
       flex: 1; padding: 8px 10px; border-radius: 10px; 
-      border: 1px solid rgba(255,255,255,0.2); 
-      background: rgba(255,255,255,0.05); 
+      border: 1px solid rgba(211,211,211,0.2); 
+      background: rgba(0,0,0,0.2); 
       color: var(--text-sub); font-size: 0.85rem; font-weight: bold; cursor: pointer; text-align: center; 
     }
-    .exp-toggle-btn.active { background: var(--accent-purple); color: white; border-color: var(--accent-purple); }
+    .exp-toggle-btn.active { background: var(--accent-purple); color: var(--accent-gold); border-color: var(--accent-gold); }
 
     .dlc-header {
       color: var(--accent-gold);
@@ -103,23 +103,23 @@
       font-weight: bold;
       text-transform: uppercase;
       margin: 12px 0 6px 0;
-      border-bottom: 1px solid rgba(255,183,3,0.3);
+      border-bottom: 1px solid rgba(244,208,63,0.3);
       padding-bottom: 4px;
     }
 
     .role-config-list { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 5px; }
-    .role-config-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 10px; }
+    .role-config-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(211,211,211,0.05); }
 
     .counter-controls { display: flex; align-items: center; gap: 10px; }
     .count-btn { 
-      width: 30px; height: 30px; border-radius: 50%; border: none; 
-      background: var(--accent-purple); color: white; font-weight: bold; font-size: 1.1rem; 
+      width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--accent-gold); 
+      background: var(--accent-red); color: var(--text-main); font-weight: bold; font-size: 1.1rem; 
       cursor: pointer; display: flex; justify-content: center; align-items: center; 
     }
 
     .secret-card { 
-      background: linear-gradient(135deg, #1f243d, #0f1322); 
-      border: 2px dashed var(--accent-purple); text-align: center; padding: 30px 20px; 
+      background: linear-gradient(135deg, #222440, #111222); 
+      border: 2px dashed var(--accent-gold); text-align: center; padding: 30px 20px; 
       border-radius: 16px; position: relative; overflow: hidden; min-height: 180px; 
       display: flex; flex-direction: column; justify-content: center; 
     }
@@ -127,48 +127,47 @@
 
     .hidden-cover { 
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-      background: #111425; 
+      background: #111222; 
       display: flex; flex-direction: column; justify-content: center; align-items: center; 
       transition: none; cursor: pointer; padding: 20px; z-index: 10; 
     }
     .hidden-cover.revealed { transform: translateY(-100%); pointer-events: none; transition: transform 0.4s ease; }
 
-    .role-item { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border-left: 5px solid var(--accent-blue); margin-bottom: 8px; }
+    .role-item { background: rgba(0,0,0,0.25); padding: 12px; border-radius: 10px; border-left: 5px solid var(--text-main); margin-bottom: 8px; }
     .role-item.dorf { border-left-color: var(--accent-green); }
     .role-item.wolf { border-left-color: var(--accent-red); }
-    .role-item.neutral { border-left-color: var(--accent-purple); }
+    .role-item.neutral { border-left-color: var(--accent-gold); }
 
     .team-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; margin-left: 6px; }
-    .team-badge.dorf { background: rgba(42, 157, 143, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
-    .team-badge.wolf { background: rgba(230, 57, 70, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); }
-    .team-badge.neutral { background: rgba(114, 9, 183, 0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+    .team-badge.dorf { background: var(--accent-green); color: var(--text-main); border: 1px solid rgba(211,211,211,0.3); }
+    .team-badge.wolf { background: var(--accent-red); color: var(--text-main); border: 1px solid var(--accent-gold); }
+    .team-badge.neutral { background: var(--accent-purple); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
 
-    .role-title { font-weight: bold; font-size: 1.1rem; color: #fff; display: flex; align-items: center; justify-content: space-between; }
+    .role-title { font-weight: bold; font-size: 1.1rem; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; }
     .role-desc { font-size: 0.9rem; color: var(--text-sub); margin-top: 6px; line-height: 1.3; }
-    .role-category { font-size: 0.75rem; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 2px; font-weight: bold; }
 
     .night-card-active { 
-      background: linear-gradient(135deg, rgba(114, 9, 183, 0.3), rgba(23, 27, 48, 0.95)); 
+      background: linear-gradient(135deg, rgba(74, 21, 75, 0.4), var(--card-bg)); 
       border: 2px solid var(--accent-gold); border-radius: 16px; padding: 20px; text-align: center; 
     }
 
     .player-inspect-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-top: 15px; }
     .player-inspect-btn { 
-      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); 
-      padding: 10px; border-radius: 10px; color: #fff; font-size: 0.9rem; font-weight: bold; cursor: pointer; text-align: center; transition: 0.2s; 
+      background: rgba(0,0,0,0.3); border: 1px solid rgba(211,211,211,0.2); 
+      padding: 10px; border-radius: 10px; color: var(--text-main); font-size: 0.9rem; font-weight: bold; cursor: pointer; text-align: center; transition: 0.2s; 
     }
-    .player-inspect-btn:hover { background: rgba(255, 183, 3, 0.1); border-color: var(--accent-gold); }
-    .player-inspect-btn.selected { background: var(--accent-gold); color: #000; border-color: var(--accent-gold); }
+    .player-inspect-btn:hover { background: rgba(244, 208, 63, 0.1); border-color: var(--accent-gold); }
+    .player-inspect-btn.selected { background: var(--accent-gold); color: #111222; border-color: var(--accent-gold); }
 
-    .role-reveal-box { margin-top: 12px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--accent-gold); border-radius: 12px; padding: 12px; text-align: center; }
+    .role-reveal-box { margin-top: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--accent-gold); border-radius: 12px; padding: 12px; text-align: center; }
   </style>
 </head>
 <body>
 
-  <!-- Splash-Screen mit Versionsnummer v1.7 -->
+  <!-- Splash-Screen mit Versionsnummer v1.8 -->
   <div id="splash">
     <h1>🐺 Werwolf Rollen-Manager</h1>
-    <p>v1.7</p>
+    <p>v1.8</p>
     <button class="splash-btn" onclick="closeSplash()">Loslegen</button>
   </div>
 
@@ -183,10 +182,10 @@
     <!-- TAB 1: SETUP -->
     <div id="tab-setup" class="section active">
       <div class="card">
-        <h3>1. Spielernamen eingeben</h3>
+        <h3>1. Spielernamen eingebe</h3>
         <textarea id="playerInput" rows="3" oninput="saveInputsToStorage()">Moritz, Anna, Jonas, Lisa, Lukas</textarea>
         
-        <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+        <div style="margin-top: 10px; border-top: 1px solid rgba(211,211,211,0.1); padding-top: 10px;">
           <p style="font-size: 0.8rem; color: var(--accent-gold); font-weight: bold; margin-bottom: 5px;">📜 Zuletzt vorgespielte Runden:</p>
           <div id="recentGamesList" style="display: flex; flex-wrap: wrap; gap: 6px;">
             <span style="font-size: 0.8rem; color: var(--text-sub);">Noch keine vorherigen Runden gespeichert.</span>
@@ -358,7 +357,7 @@
     function resetAllCounts() { availableRoles.forEach(r => r.count = 0); renderRoleConfig(); prepareNightSequence(); saveInputsToStorage(); }
     function getPlayerCount() { return document.getElementById('playerInput').value.split(/,|\n/).map(p => p.trim()).filter(p => p.length > 0).length; }
     function getTotalRolesCount() { let total = 0; availableRoles.forEach(r => { if (activeExpansions[r.category]) total += r.count; }); return total; }
-        function renderRoleConfig() {
+         function renderRoleConfig() {
       const container = document.getElementById('roleConfigContainer');
       container.innerHTML = '';
 
@@ -388,7 +387,7 @@
 
       const summary = document.getElementById('countSummary'), startBtn = document.getElementById('startBtn');
       let totalRoles = getTotalRolesCount(), playerCount = getPlayerCount();
-      if (totalRoles === playerCount) { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Perfekt!)`; summary.style.color = 'var(--accent-blue)'; startBtn.disabled = false; }
+      if (totalRoles === playerCount) { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Perfekt!)`; summary.style.color = 'var(--text-main)'; startBtn.disabled = false; }
       else if (totalRoles > playerCount) { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Zu viele!)`; summary.style.color = 'var(--accent-red)'; startBtn.disabled = true; }
       else { summary.innerText = `Spieler: ${playerCount} | Rollen: ${totalRoles} (Zu wenig!)`; summary.style.color = 'var(--accent-gold)'; startBtn.disabled = true; }
     }
@@ -425,17 +424,17 @@
 
       if (role.actionType === 'amor') {
         interactiveHTML = `
-          <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); pt:10px;">
+          <div style="margin-top:15px; border-top:1px solid rgba(211,211,211,0.1); pt:10px;">
             <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">💘 Wähle 2 Spieler als Liebespaar:</p>
             <div class="player-inspect-grid">
               ${players.map(p => `<button class="player-inspect-btn ${lovers.includes(p) ? 'selected' : ''}" onclick="toggleAmorSelection('${p}', this)">${p}</button>`).join('')}
             </div>
-            <p id="amorStatus" style="font-size:0.85rem; color:var(--accent-green); margin-top:8px; text-align:center;"></p>
+            <p id="amorStatus" style="font-size:0.85rem; color:var(--accent-gold); margin-top:8px; text-align:center;"></p>
           </div>`;
       }
       if (role.actionType === 'inspect') {
         interactiveHTML = `
-          <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); pt:10px;">
+          <div style="margin-top:15px; border-top:1px solid rgba(211,211,211,0.1); pt:10px;">
             <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">🔍 Wähle einen Spieler zum Untersuchen:</p>
             <div class="player-inspect-grid">
               ${players.map(p => `<button class="player-inspect-btn" onclick="inspectPlayer('${p}')">👁️ ${p}</button>`).join('')}
@@ -445,7 +444,7 @@
       }
       if (role.actionType === 'wolfKill') {
         interactiveHTML = `
-          <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); pt:10px;">
+          <div style="margin-top:15px; border-top:1px solid rgba(211,211,211,0.1); pt:10px;">
             <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">🐺 Wer wählt das Wolfsopfer?</p>
             <div class="player-inspect-grid">
               ${players.map(p => `<button class="player-inspect-btn" onclick="setWolfVictim('${p}', this)">🩸 ${p}</button>`).join('')}
@@ -455,7 +454,7 @@
       }
       if (role.actionType === 'witch') {
         interactiveHTML = `
-          <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); pt:10px;">
+          <div style="margin-top:15px; border-top:1px solid rgba(211,211,211,0.1); pt:10px;">
             <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">🧪 Hexen-Tränke:</p>
             <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:8px;">Das Wolfsopfer dieser Nacht ist: <b>${nightSummary.victim || 'Niemand / Unbekannt'}</b></p>
             <div style="display:flex; flex-direction:column; gap:8px;">
@@ -573,7 +572,7 @@
       let captainHTML = '';
       if (!captain) {
         captainHTML = `
-          <div style="background:rgba(255, 183, 3, 0.1); border:1px solid var(--accent-gold); padding:10px; border-radius:10px; margin-top:10px;">
+          <div style="background:rgba(244, 208, 63, 0.1); border:1px solid var(--accent-gold); padding:10px; border-radius:10px; margin-top:10px;">
             <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">👑 Wähle den Hauptmann des Dorfes:</p>
             <div class="player-inspect-grid">
               ${players.filter(p => !deadPlayers.includes(p)).map(p => `<button class="player-inspect-btn" onclick="selectCaptain('${p}')">👑 ${p}</button>`).join('')}
@@ -581,8 +580,8 @@
           </div>`;
       } else if (captainDied) {
         captainHTML = `
-          <div style="background:rgba(230, 57, 70, 0.15); border:1px solid var(--accent-red); padding:10px; border-radius:10px; margin-top:10px;">
-            <p style="font-size:0.85rem; color:var(--accent-red); font-weight:bold;">💀 Hauptmann (${captain}) ist tot! Wähle Nachfolger:</p>
+          <div style="background:rgba(139, 0, 0, 0.2); border:1px solid var(--accent-red); padding:10px; border-radius:10px; margin-top:10px;">
+            <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">💀 Hauptmann (${captain}) ist tot! Wähle Nachfolger:</p>
             <div class="player-inspect-grid">
               ${players.filter(p => !deadPlayers.includes(p)).map(p => `<button class="player-inspect-btn" onclick="selectCaptain('${p}')">👑 ${p}</button>`).join('')}
             </div>
@@ -592,20 +591,20 @@
       }
 
       box.innerHTML = `
-        <div class="card" style="background: rgba(255,255,255,0.04); border: 2px solid var(--accent-gold);">
+        <div class="card" style="background: rgba(0,0,0,0.3); border: 2px solid var(--accent-gold);">
           <h2 style="color:var(--accent-gold); text-align:center;">☀️ Morgen von Tag ${currentNight}</h2>
-          <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:10px; margin-top:8px;">
+          <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:10px; margin-top:8px;">
             <p><b>Tote in dieser Nacht:</b> ${nightDeaths.length > 0 ? nightDeaths.join(', ') : 'Niemand'}</p>
             ${captainHTML}
           </div>
-          <h3 style="margin-top:15px; font-size:1.1rem; color:var(--accent-red);">⚖️ Dorfabstimmung (Hinrichtung)</h3>
+          <h3 style="margin-top:15px; font-size:1.1rem; color:var(--accent-gold);">⚖️ Dorfabstimmung (Hinrichtung)</h3>
           <div class="player-inspect-grid" style="margin-top:8px;">
             ${players.map(p => `
               <button class="player-inspect-btn ${deadPlayers.includes(p) ? 'selected' : ''}" onclick="lynchPlayer('${p}')" ${deadPlayers.includes(p) ? 'disabled' : ''}>${deadPlayers.includes(p) ? '💀 ' + p + ' (Tot)' : (p === captain ? '👑 ' + p : '⚖️ ' + p)}
               </button>
             `).join('')}
           </div>
-          <button class="btn" onclick="finishDayAndNextNight()" style="margin-top:15px; background:linear-gradient(45deg, var(--accent-purple), #7209b7); color:white;">
+          <button class="btn" onclick="finishDayAndNextNight()" style="margin-top:15px; background:linear-gradient(45deg, var(--accent-purple), #6A1B6D); color:var(--accent-gold);">
             🌙 Nächste Nacht einläuten
           </button>
         </div>`;
