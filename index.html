@@ -157,7 +157,7 @@
 
   <div id="splash">
     <h1>🐺 Werwolf Rollen-Manager</h1>
-    <p>Inklusive Amor-Liebespaar, Hexen-Tränken & Tag-Modus</p>
+    <p>Inklusive Amor, Erfinder, Hauptmann & Tränken</p>
     <button class="splash-btn" onclick="closeSplash()">Loslegen</button>
   </div>
 
@@ -247,7 +247,7 @@
       { id: "hexe", name: "Die Hexe", team: "dorf", category: "Klassik", desc: "Besitzt einen Heil- und einen Gifttrank für die Nacht.", count: 0, nightOrder: 10, night1Only: false, actionType: "witch" },
       { id: "dorfbewohner", name: "Einfacher Dorfbewohner", team: "dorf", category: "Klassik", desc: "Hat keine besonderen Fähigkeiten, hilft tagsüber.", count: 2, nightOrder: 99, night1Only: false, actionType: "none" },
       { id: "jaeger", name: "Der Jäger", team: "dorf", category: "Klassik", desc: "Reißt beim eigenen Tod sofort einen Spieler mit in den Tod.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
-      { id: "hauptmann", name: "Der Hauptmann", team: "dorf", category: "Klassik", desc: "Seine Stimme zählt bei Abstimmungen doppelt.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
+      { id: "hauptmann", name: "Der Hauptmann", team: "dorf", category: "Klassik", desc: "Wird vom Dorf gewählt; seine Stimme zählt bei Abstimmungen doppelt.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
       { id: "schlafendes_maedchen", name: "Das Kleine Mädchen", team: "dorf", category: "Klassik", desc: "Darf nachts heimlich blinzeln, um die Werwölfe zu beobachten.", count: 0, nightOrder: 8, night1Only: false, actionType: "none" },
 
       // CHARAKTER ADD-ON
@@ -256,7 +256,7 @@
       { id: "floete", name: "Der Flötenspieler", team: "neutral", category: "Add-on", desc: "Verzaubert nachts zwei Personen.", count: 0, nightOrder: 7, night1Only: false, actionType: "none" },
       { id: "urwolf", name: "Der Urwolf", team: "wolf", category: "Add-on", desc: "Kann einmal das nächtliche Opfer in einen Werwolf verwandeln.", count: 0, nightOrder: 8, night1Only: false, actionType: "wolfKill" },
       { id: "grosser_wolf", name: "Der Große Böse Wolf", team: "wolf", category: "Add-on", desc: "Darf nachts ein zweites Opfer fressen, solange kein Wolf starb.", count: 0, nightOrder: 8, night1Only: false, actionType: "wolfKill" },
-      { id: "erfinder", name: "Der Erfinder", team: "dorf", category: "Add-on", desc: "Verteilt zu Beginn magische Hilfsmittel.", count: 0, nightOrder: 11, night1Only: false, actionType: "none" },
+      { id: "erfinder", name: "Der Erfinder", team: "dorf", category: "Add-on", desc: "Verteilt magische Hilfsmittel an Mitspieler.", count: 0, nightOrder: 11, night1Only: false, actionType: "inventor" },
       { id: "baer", name: "Der Bärenführer", team: "dorf", category: "Add-on", desc: "Knurrt morgens, wenn ein Wolf neben ihm sitzt.", count: 1, nightOrder: 99, night1Only: false, actionType: "none" },
       { id: "ritter", name: "Der Ritter", team: "dorf", category: "Add-on", desc: "Infiziert den linken Wolf beim Gefressenwerden.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
       { id: "magd", name: "Die Ergebene Magd", team: "dorf", category: "Add-on", desc: "Opfert sich bei Hinrichtung für die Rolle des Opfers.", count: 0, nightOrder: 99, night1Only: false, actionType: "none" },
@@ -279,7 +279,7 @@
     let currentGuideFilter = "Alle";
     let players = [], assignments = {}, currentPlayerIndex = 0;
     
-    // Spielzustand für Live-Ablauf
+    // Spielzustand
     let currentNight = 1;
     let nightSteps = [];
     let currentNightStepIndex = 0;
@@ -287,8 +287,10 @@
     // Interaktiver Zustand
     let lovers = [];
     let deadPlayers = [];
+    let captain = null;
     let witchState = { healUsed: false, poisonUsed: false };
     let nightSummary = { victim: null, witchAction: null };
+    let inventorAssignments = {}; // Speichert Erfinder-Aktionen
 
     function closeSplash() {
       document.getElementById('splash').style.opacity = '0';
@@ -348,8 +350,7 @@
       if (change > 0 && getTotalRolesCount() >= getPlayerCount()) return;
       if (availableRoles[index].count + change >= 0) { availableRoles[index].count += change; renderRoleConfig(); prepareNightSequence(); }
     }
-          // NACHT & TAG ABLAUF LOGIK
-    function prepareNightSequence() {
+        function prepareNightSequence() {
       document.getElementById('nightTitle').innerText = `🌙 Nacht ${currentNight}`;
       
       nightSteps = availableRoles.filter(r => {
@@ -372,7 +373,6 @@
 
       const role = nightSteps[currentNightStepIndex];
       let teamBadgeText = role.team === 'wolf' ? 'Werwolf' : (role.team === 'neutral' ? 'Neutral' : 'Dorf');
-
       let interactiveHTML = '';
 
       // 1. AMOR: Liebespaar auswählen
@@ -381,13 +381,13 @@
           <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); pt:10px;">
             <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">💘 Wähle 2 Spieler als Liebespaar:</p>
             <div class="player-inspect-grid" id="amorSelectionGrid">
-              ${players.map(p => `<button class="player-inspect-btn" onclick="toggleAmorSelection('${p}', this)">${p}</button>`).join('')}
+              ${players.map(p => `<button class="player-inspect-btn ${lovers.includes(p) ? 'selected' : ''}" onclick="toggleAmorSelection('${p}', this)">${p}</button>`).join('')}
             </div>
             <p id="amorStatus" style="font-size:0.85rem; color:var(--accent-green); margin-top:8px; text-align:center;"></p>
           </div>`;
       }
 
-      // 2. SEHERIN / FUCHS: Spieler inspizieren
+      // 2. SEHERIN / FUCHS: Inspizieren
       if (role.actionType === 'inspect') {
         interactiveHTML = `
           <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); pt:10px;">
@@ -430,6 +430,20 @@
               </button>
             </div>
             <p id="witchStatus" style="font-size:0.85rem; color:var(--accent-gold); margin-top:8px; text-align:center;"></p>
+          </div>`;
+      }
+
+      // 5. ERFINDER: Hilfsmittel verteilen
+      if (role.actionType === 'inventor') {
+        interactiveHTML = `
+          <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); pt:10px;">
+            <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">🛠️ Erfinder-Verteilung (Nacht ${currentNight}):</p>
+            <select id="inventorTarget" style="margin-top:8px;">
+              ${players.map(p => `<option value="${p}">${p}</option>`).join('')}
+            </select>
+            <input type="text" id="inventorItem" placeholder="Gegenstand (z.B. Schutzschild)" style="margin-top:8px;">
+            <button class="btn" onclick="assignInventorItem()" style="margin-top:8px; width:100%;">Gegenstand vergeben</button>
+            <p id="inventorStatus" style="font-size:0.85rem; color:var(--accent-blue); margin-top:6px; text-align:center;"></p>
           </div>`;
       }
 
@@ -503,6 +517,20 @@
       }
     }
 
+    function assignInventorItem() {
+      const target = document.getElementById('inventorTarget').value;
+      const item = document.getElementById('inventorItem').value;
+      if (target && item) {
+        inventorAssignments[target] = item;
+        document.getElementById('inventorStatus').innerText = `✅ ${target} hat "${item}" erhalten!`;
+      }
+    }
+
+    function selectCaptain(playerName) {
+      captain = playerName;
+      renderDayVotingPhase();
+    }
+
     function nextNightStep() { currentNightStepIndex++; renderCurrentNightStep(); }
     function prevNightStep() { if (currentNightStepIndex > 0) { currentNightStepIndex--; renderCurrentNightStep(); } }
 
@@ -525,6 +553,32 @@
         }
       });
 
+      let captainDied = captain && deadPlayers.includes(captain);
+      let captainHTML = '';
+      if (!captain) {
+        captainHTML = `
+          <div style="background:rgba(255, 183, 3, 0.1); border:1px solid var(--accent-gold); padding:10px; border-radius:10px; margin-top:10px;">
+            <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;">👑 Wähle den Hauptmann des Dorfes:</p>
+            <div class="player-inspect-grid">
+              ${players.filter(p => !deadPlayers.includes(p)).map(p => `
+                <button class="player-inspect-btn" onclick="selectCaptain('${p}')">👑 ${p}</button>
+              `).join('')}
+            </div>
+          </div>`;
+      } else if (captainDied) {
+        captainHTML = `
+          <div style="background:rgba(230, 57, 70, 0.15); border:1px solid var(--accent-red); padding:10px; border-radius:10px; margin-top:10px;">
+            <p style="font-size:0.85rem; color:var(--accent-red); font-weight:bold;">💀 Der Hauptmann (${captain}) ist gestorben! Wähle einen Nachfolger:</p>
+            <div class="player-inspect-grid">
+              ${players.filter(p => !deadPlayers.includes(p)).map(p => `
+                <button class="player-inspect-btn" onclick="selectCaptain('${p}')">👑 ${p}</button>
+              `).join('')}
+            </div>
+          </div>`;
+      } else {
+        captainHTML = `<p style="margin-top:5px; font-size:0.85rem; color:var(--accent-gold);">👑 Aktueller Hauptmann: <b>${captain}</b></p>`;
+      }
+
       box.innerHTML = `
         <div class="card" style="background: rgba(255,255,255,0.04); border: 2px solid var(--accent-gold);">
           <h2 style="color:var(--accent-gold); text-align:center;">☀️ Morgen von Tag ${currentNight}</h2>
@@ -533,6 +587,7 @@
           <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:10px; margin-top:8px;">
             <p><b>Tote in dieser Nacht:</b> ${nightDeaths.length > 0 ? nightDeaths.join(', ') : 'Niemand (Friedliche Nacht)'}</p>
             ${lovers.length > 0 ? `<p style="margin-top:5px; font-size:0.85rem; color:var(--accent-purple);">💘 Aktives Liebespaar: ${lovers.join(' & ')}</p>` : ''}
+            ${captainHTML}
           </div>
 
           <h3 style="margin-top:15px; font-size:1.1rem; color:var(--accent-red);">⚖️ Dorfabstimmung (Hinrichtung)</h3>
@@ -540,7 +595,7 @@
           
           <div class="player-inspect-grid" style="margin-top:8px;">
             ${players.map(p => `
-              <button class="player-inspect-btn ${deadPlayers.includes(p) ? 'selected' : ''}" onclick="lynchPlayer('${p}')" ${deadPlayers.includes(p) ? 'disabled' : ''}>${deadPlayers.includes(p) ? '💀 ' + p + ' (Tot)' : '⚖️ ' + p}
+              <button class="player-inspect-btn ${deadPlayers.includes(p) ? 'selected' : ''}" onclick="lynchPlayer('${p}')" ${deadPlayers.includes(p) ? 'disabled' : ''}>${deadPlayers.includes(p) ? '💀 ' + p + ' (Tot)' : (p === captain ? '👑 ' + p : '⚖️ ' + p)}
               </button>
             `).join('')}
           </div>
@@ -575,6 +630,7 @@
       currentNight = 1;
       deadPlayers = [];
       lovers = [];
+      captain = null;
       prepareNightSequence();
     }
 
@@ -590,6 +646,7 @@
       currentNight = 1;
       deadPlayers = [];
       lovers = [];
+      captain = null;
       document.getElementById('setupStatus').innerText = `✅ Rollen verteilt! Wechsel zu Reiter 2.`;
       loadCurrentPlayer();
       prepareNightSequence();
